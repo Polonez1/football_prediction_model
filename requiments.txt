@@ -2,3 +2,8 @@ request
 bs4
 selenium
 request
+joblib
+pydantic
+fastapi
+typing
+sklearn???

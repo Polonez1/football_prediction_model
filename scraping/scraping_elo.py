@@ -252,6 +252,6 @@ def get_elo_by_team(team: str, season="2023-2024"):
 
 
 if "__main__" == __name__:
-    df = get_elo_by_team(team="Manchester United")
+    df = create_matches_data_table()
 
-    print(df.head(10))
+    print(len(df))

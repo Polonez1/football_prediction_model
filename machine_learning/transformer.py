@@ -96,6 +96,9 @@ if "__main__" == __name__:
             "home_elo",
             "away_team",
             "away_elo",
+            "home_prb",
+            "draw_prb",
+            "away_prb",
             "home_result",
             "away_result",
         ]

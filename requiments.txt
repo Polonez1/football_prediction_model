@@ -7,3 +7,4 @@ pydantic
 fastapi
 typing
 sklearn???
+shap

@@ -41,7 +41,9 @@ class EloTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: pd.DataFrame, y=None):
-        return self._add_elo_xG(X)
+        _X = self._add_elo_xG(X)
+        __X = self._add_elo_diff(_X)
+        return __X
 
     def _calc_elo_xG(self, elo1, elo2):
         xG_coef = 1 / (10 ** ((elo1 - elo2) / self.elo_factor) + 1)
@@ -60,6 +62,10 @@ class EloTransformer(BaseEstimator, TransformerMixin):
 
         return df
         # df = df.assign()
+
+    def _add_elo_diff(self, df: pd.DataFrame, y=None):
+        df["elo_diff"] = df["home_elo"] - df["away_elo"]
+        return df
 
 
 def create_pipeline():
@@ -107,4 +113,4 @@ if "__main__" == __name__:
 
     # dff = tr.fit_transform(df)
 
-    print(dft.head(20))
+    print(dft.columns)

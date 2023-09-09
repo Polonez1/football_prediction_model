@@ -26,11 +26,11 @@ def train_model():
     rfc = rfc_model.create_rfc_model(params=ml_config.rfc_params)
 
     rfc.fit(X_train, y_train)
-    y_pred = rfc.predict(X_test)
-    scores = cross_val_score(rfc, X_test, y_test, cv=5)
+    sc = rfc.score(X_test, y_test)
+    # scores = cross_val_score(rfc, X_test, y_test, cv=5)
 
     # score = rfc.score(X_test, y_test)
-    return scores
+    return sc
 
 
 if "__main__" == __name__:

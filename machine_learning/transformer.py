@@ -34,16 +34,18 @@ class EloTransformer(BaseEstimator, TransformerMixin):
         self.elo_factor = elo_factor
 
     def fit(self, X: pd.DataFrame, y=None):
-        self.home_avg = X["home_result"].mean()
-        self.away_avg = X["away_result"].mean()
-        self.overall_avg = self.home_avg + self.away_avg
+        self.home_avg = X["home_result"].mean()  # 1.44
+        self.away_avg = X["away_result"].mean()  # 1.22
+        self.overall_avg = self.home_avg + self.away_avg  # 2.9
 
         return self
 
     def transform(self, X: pd.DataFrame, y=None):
-        _X = self._add_elo_xG(X)
-        __X = self._add_elo_diff(_X)
-        return __X
+        X1 = self._add_elo_xG(X)
+        X2 = self._add_elo_diff(X1)
+        X3 = self._correct_xG(X2)
+
+        return X3
 
     def _calc_elo_xG(self, elo1, elo2):
         xG_coef = 1 / (10 ** ((elo1 - elo2) / self.elo_factor) + 1)
@@ -63,6 +65,18 @@ class EloTransformer(BaseEstimator, TransformerMixin):
         return df
         # df = df.assign()
 
+    def _correct_xG(self, df: pd.DataFrame):
+        df["stde_home"] = self.home_avg - df["home_xG"]
+        df["stde_away"] = self.home_avg - df["away_xG"]
+
+        stde_avg_home = df["stde_home"].mean()
+        stde_avg_away = df["stde_away"].mean()
+
+        df["home_xG"] = df["home_xG"] + stde_avg_home
+        df["away_xG"] = df["away_xG"] + stde_avg_away
+
+        return df
+
     def _add_elo_diff(self, df: pd.DataFrame, y=None):
         df["elo_diff"] = df["home_elo"] - df["away_elo"]
         return df
@@ -80,7 +94,7 @@ def create_pipeline():
     return pipeline
 
 
-def transform_data(df: pd.DataFrame):
+def transform_data(df: pd.DataFrame) -> pd.DataFrame:
     pipeline = create_pipeline()
     transformed_data = pipeline.fit_transform(df)
     transformed_result_series = pd.Series(transformed_data[:, 0], name="result_final")
@@ -113,4 +127,4 @@ if "__main__" == __name__:
 
     # dff = tr.fit_transform(df)
 
-    print(dft.columns)
+    print(dft)

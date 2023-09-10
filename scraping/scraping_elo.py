@@ -235,6 +235,7 @@ def create_matches_data_table():
             _df = parsing_elo_matches(country=comp, season=season)
             df = _rename_elo_matches_columns(_df)
             df["Date"].fillna(method="ffill", inplace=True)
+            df["season"] = season
             full_df.append(df)
             print(comp)
 
@@ -251,7 +252,21 @@ def get_elo_by_team(team: str, season="2023-2024"):
     return df_team_elo
 
 
-if "__main__" == __name__:
-    df = create_matches_data_table()
+def get_full_elo_ratings(seasons: list):
+    df_list = []
+    for season in seasons:
+        print(season)
+        df = create_last_elo_ranking_table(season=season)
+        df["season"] = season
+        df_list.append(df)
 
-    print(len(df))
+    full_df = pd.concat(df_list)
+    return full_df
+
+
+if "__main__" == __name__:
+    # df = create_matches_data_table()
+    # df.to_excel("./scraping/")
+    # df = pd.read_excel("./data/downloaded_data/matches1.xlsx")
+    elo = get_full_elo_ratings(seasons=["2022-2023"])
+    print(elo)

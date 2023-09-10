@@ -9,11 +9,13 @@ COL_TO_X = [
     # "draw_prb",
     # "away_prb",
     "elo_diff",
+    "place_elo_home",
+    "place_elo_away",
 ]
 COL_TO_Y = ["result_final"]
 
 
-DATA_PATH = "./data/downloaded_data/matches1.xlsx"
+DATA_PATH = "./data/downloaded_data/matches.xlsx"
 
 
 rfc_params = {

@@ -1,6 +1,6 @@
 import sys
 import pandas as pd
-from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 
@@ -33,6 +33,7 @@ def train_model():
     score = rfc.score(X_test, y_test)
 
     # clf = RandomForestClassifier()
+
     #
     # grid_search = GridSearchCV(
     #    estimator=clf, param_grid=ml_config.param_grid, cv=5, n_jobs=2, verbose=3
@@ -41,6 +42,7 @@ def train_model():
     # print(grid_search.best_params_)
     # print("Best GridSearchCV Score:")
     # print(grid_search.best_score_)
+
     return scores
 
 

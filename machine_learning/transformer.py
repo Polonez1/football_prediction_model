@@ -44,8 +44,10 @@ class EloTransformer(BaseEstimator, TransformerMixin):
         X1 = self._add_elo_xG(X)
         X2 = self._add_elo_diff(X1)
         X3 = self._correct_xG(X2)
+        X4 = self._xG_coef(X3)
+        X5 = self._xG_multiple_coef(X4)
 
-        return X3
+        return X5
 
     def _calc_elo_xG(self, elo1, elo2):
         xG_coef = 1 / (10 ** ((elo1 - elo2) / self.elo_factor) + 1)
@@ -64,6 +66,46 @@ class EloTransformer(BaseEstimator, TransformerMixin):
 
         return df
         # df = df.assign()
+
+    def _calculate_elo_diff_coef(self, elo1, elo2):
+        if elo1 <= elo2:
+            if elo1 > elo2 - 50:
+                fcoef = 1
+            elif elo1 > elo2 - 100:
+                fcoef = 0.90
+            elif elo1 > elo2 - 200:
+                fcoef = 0.8
+            else:
+                fcoef = 0.6
+        else:
+            if elo1 <= elo2 + 50:
+                scoef = 1
+            elif elo1 <= elo2 + 100:
+                scoef = 1.1
+            elif elo1 <= elo2 + 200:
+                scoef = 1.2
+            else:
+                scoef = 1.4
+
+        return fcoef if elo1 <= elo2 else scoef
+
+    def _xG_coef(self, df: pd.DataFrame):
+        df["home_coef"] = df.apply(
+            lambda row: self._calculate_elo_diff_coef(row["home_elo"], row["away_elo"]),
+            axis=1,
+        )
+        df["away_coef"] = df.apply(
+            lambda row: self._calculate_elo_diff_coef(row["away_elo"], row["home_elo"]),
+            axis=1,
+        )
+
+        return df
+
+    def _xG_multiple_coef(self, df: pd.DataFrame):
+        df["home_xG"] = df["home_xG"] * df["home_coef"]
+        df["away_xG"] = df["away_xG"] * df["away_coef"]
+
+        return df
 
     def _correct_xG(self, df: pd.DataFrame):
         df["stde_home"] = self.home_avg - df["home_xG"]
@@ -124,7 +166,5 @@ if "__main__" == __name__:
         ]
     ]
     dft = transform_data(df)
-
-    # dff = tr.fit_transform(df)
 
     print(dft)

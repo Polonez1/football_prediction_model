@@ -29,11 +29,11 @@ rfc_params = {
 }
 
 param_grid = {
-    "n_estimators": [1, 5, 10, 25, 50, 75, 100],
-    "max_depth": [None, 5, 10, 15, 20, 25, 50],
+    "n_estimators": [15, 17, 20, 23, 25, 27, 30],
+    "max_depth": [None, 2, 4, 6, 8, 10],
     "criterion": ["gini"],
-    "min_samples_split": [1, 5, 10, 15, 20],
-    "max_features": ["sqrt"],
+    "min_samples_split": [10, 15, 20, 25],
+    # "max_features": ["sqrt"],
     # "bootstrap": [True, False],
-    # "oob_score": [True, False],
+    "oob_score": [True, False],
 }

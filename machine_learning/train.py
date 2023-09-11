@@ -28,7 +28,7 @@ def train_model():
     rfc.fit(X_train, y_train)
     sc = rfc.score(X_test, y_test)
     rfc_model.shap_explainer(rfc, X_test=X_test)
-    scores = cross_val_score(rfc, X_test, y_test, cv=5)
+    scores = cross_val_score(rfc, X_test, y_test, cv=3)
 
     score = rfc.score(X_test, y_test)
 

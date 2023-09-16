@@ -47,7 +47,6 @@ def train_model():
 
 
 #
-
 if "__main__" == __name__:
     res = train_model()
     print(res)

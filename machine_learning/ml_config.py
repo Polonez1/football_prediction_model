@@ -11,6 +11,8 @@ COL_TO_X = [
     "elo_diff",
     "place_elo_home",
     "place_elo_away",
+    "home_form",
+    "away_form",
 ]
 COL_TO_Y = ["result_final"]
 

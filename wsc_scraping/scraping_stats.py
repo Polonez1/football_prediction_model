@@ -72,7 +72,7 @@ class ParsingData:
         hrefs_df = pd.DataFrame(hrefs_dict)
         return hrefs_df
 
-    def _leagues_loop(self) -> pd.DataFrame:
+    def _hrefs_collector(self) -> pd.DataFrame:
         """Collected all hrefs
 
         Returns:
@@ -93,20 +93,45 @@ class ParsingData:
             full_hrefs_df.append(hrefs_df)
 
         df = pd.concat(full_hrefs_df)
+
         return df
 
-    def entry_wsc(self):
-        url = wsc_config.WEB
+    def _season_hrefs_collector(self, url):
         self.driver.get(url)
-        for cookies in pickle.load(open(wsc_config.WSC_COOKIES, "rb")):
-            self.driver.add_cookie(cookies)
-        self.driver.refresh()
+        hrefs_season_list = self.driver.find_element(By.ID, "seasons").find_elements(
+            By.TAG_NAME, "option"
+        )
+        for e in hrefs_season_list:
+            href_element = e.get_attribute("value")
+            season = e.get_attribute("text")
 
-        self.driver.find_element(By.XPATH, wsc_config.AGREE_COOKIES_BUTTON).click()
-        self._leagues_loop()
+            print(season, href_element)
+
+    def _season_collector(
+        self, hrefs_data: pd.DataFrame = pd.read_excel(".\wsc_scraping\hrefs.xlsx")
+    ):
+        hrefs_list = hrefs_data["hrefs"].values
+
+        for i in hrefs_list:
+            self._season_hrefs_collector(url=i)
+            break
+
+    def _data_collector(self):
+        pass
+
+    def entry_wsc(self):
+        # url = wsc_config.WEB
+        # self.driver.get(url)
+        # for cookies in pickle.load(open(wsc_config.WSC_COOKIES, "rb")):
+        #    self.driver.add_cookie(cookies)
+        # self.driver.refresh()
+        #
+        # self.driver.find_element(By.XPATH, wsc_config.AGREE_COOKIES_BUTTON).click()
+        # hrefs_df = self._hrefs_collector()
+        self._season_collector()
 
         print("pop up disabled")
-        time.sleep(180)
+        time.sleep(10)
         self.driver.quit()
 
 

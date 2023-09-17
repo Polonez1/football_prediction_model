@@ -49,26 +49,51 @@ class ParsingData:
         self.driver.quit()
         print("Cookies save")
 
-    def _collect_leagues_hrefs(self):
+    def _collect_leagues_hrefs(self) -> pd.DataFrame:
+        """Collected all leagues hrefs
+
+        Returns:
+            pd.DataFrame: returned hrefs DataFrame by alphabetical list
+        """
         comp = self.driver.find_element(By.ID, "domestic-regions").find_elements(
             By.CLASS_NAME, "t"
         )
+        hrefs_dict = {"country": [], "competition": [], "hrefs": []}
+
         for i in comp:
             href = i.get_attribute("href")
-            print(href)
+            title = i.get_attribute("text")
+            country = href.partition("-")[0].split("/")[len(href.split("/")) - 1]
 
-    def _leagues_loop(self):
+            hrefs_dict["country"].append(country)
+            hrefs_dict["competition"].append(title)
+            hrefs_dict["hrefs"].append(href)
+
+        hrefs_df = pd.DataFrame(hrefs_dict)
+        return hrefs_df
+
+    def _leagues_loop(self) -> pd.DataFrame:
+        """Collected all hrefs
+
+        Returns:
+            pd.DataFrame: full hrefs dataframe
+        """
         self.driver.find_element(By.XPATH, wsc_config.ALL_LEAGUES_BUTTON).click()
         regions = self.driver.find_element(By.ID, "domestic-index")
         body_html = regions.get_attribute("innerHTML")
         soup = BeautifulSoup(body_html, "lxml")
         all_tags = soup.find_all("a")
+
+        full_hrefs_df = []
+
         for i in range(2, len(all_tags) + 1):
             btn = wsc_config.ALPHABET_BUTTON.format(n=i)
             self.driver.find_element(By.XPATH, btn).click()
-            self._collect_leagues_hrefs()
+            hrefs_df = self._collect_leagues_hrefs()
+            full_hrefs_df.append(hrefs_df)
 
-            break
+        df = pd.concat(full_hrefs_df)
+        return df
 
     def entry_wsc(self):
         url = wsc_config.WEB

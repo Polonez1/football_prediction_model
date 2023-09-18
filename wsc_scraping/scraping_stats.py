@@ -98,23 +98,42 @@ class ParsingData:
 
     def _season_hrefs_collector(self, url):
         self.driver.get(url)
+        time.sleep(10)
         hrefs_season_list = self.driver.find_element(By.ID, "seasons").find_elements(
             By.TAG_NAME, "option"
         )
-        for e in hrefs_season_list:
-            href_element = e.get_attribute("value")
-            season = e.get_attribute("text")
 
-            print(season, href_element)
+        hrefs_dict = {"href_element": [], "season": []}
+        for e in hrefs_season_list:
+            href_element = "https://www.whoscored.com/" + e.get_attribute("value")
+            season = e.get_attribute("text")
+            hrefs_dict["href_element"].append(href_element)
+            hrefs_dict["season"].append(season)
+            print(season)
+
+        hrefs_df = pd.DataFrame(hrefs_dict)
+        return hrefs_df
 
     def _season_collector(
         self, hrefs_data: pd.DataFrame = pd.read_excel(".\wsc_scraping\hrefs.xlsx")
     ):
-        hrefs_list = hrefs_data["hrefs"].values
+        full_seasons_df = []
+        for index, row in hrefs_data.iterrows():
+            country = row["country"]
+            comp = row["competition"]
+            print(country, comp)
+            iurl = row["hrefs"]
+            season_hrefs_df = self._season_hrefs_collector(url=iurl)
+            season_hrefs_df["country"] = country
+            season_hrefs_df["competition"] = comp
+            season_hrefs_df["original_url"] = iurl
+            full_seasons_df.append(season_hrefs_df)
 
-        for i in hrefs_list:
-            self._season_hrefs_collector(url=i)
-            break
+        df = pd.concat(full_seasons_df)
+        return df
+
+    def _matches_hrefs_collector(self, url):
+        pass
 
     def _data_collector(self):
         pass
@@ -128,7 +147,9 @@ class ParsingData:
         #
         # self.driver.find_element(By.XPATH, wsc_config.AGREE_COOKIES_BUTTON).click()
         # hrefs_df = self._hrefs_collector()
-        self._season_collector()
+        df = self._season_collector()
+
+        print(df.head(20))
 
         print("pop up disabled")
         time.sleep(10)

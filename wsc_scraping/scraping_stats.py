@@ -5,6 +5,8 @@ from selenium_stealth import stealth
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 
+from selenium.common.exceptions import NoSuchElementException
+
 from bs4 import BeautifulSoup
 
 import pickle
@@ -132,11 +134,78 @@ class ParsingData:
         df = pd.concat(full_seasons_df)
         return df
 
-    def _matches_hrefs_collector(self, url):
-        pass
+    def _stages_hrefs_collector(self):
+        time.sleep(10)
+        try:
+            hrefs_stage_list = self.driver.find_element(By.ID, "stages").find_elements(
+                By.TAG_NAME, "option"
+            )
+        except NoSuchElementException:
+            print(f"Error: STAGES Not Found")
+            return None
 
-    def _data_collector(self):
-        pass
+        hrefs_dict = {"competition_exp": [], "href": []}
+
+        for i in hrefs_stage_list:
+            title = i.get_attribute("text")
+            href = "https://www.whoscored.com/" + i.get_attribute("value")
+            hrefs_dict["competition_exp"].append(title)
+            hrefs_dict["href"].append(href)
+
+        df = pd.DataFrame(hrefs_dict)
+        return df
+
+    def _collect_headers_hrefs(self):
+        fixtures_href = self.driver.find_element(By.ID, "sub-navigation").find_elements(
+            By.TAG_NAME, "a"
+        )
+        detail_hrefs = {
+            "Summary": [],
+            "Fixtures": [],
+            "Team Statistics": [],
+            "Player Statistics": [],
+            "Referee Statistics": [],
+        }
+        for i in fixtures_href:
+            header = i.get_attribute("text")
+            href = i.get_attribute("href")
+            detail_hrefs[header].append(href)
+
+        for key in detail_hrefs:
+            if not detail_hrefs[key]:
+                detail_hrefs[key] = None
+
+        df = pd.DataFrame(detail_hrefs)
+        return df
+
+    # Čia reikės daryti pagal iterrows() ir perduoti url pagal season, country, season, league o po to papildomai prisidės league
+    def _stats_hrefs_collector(
+        self,
+        url="https://www.whoscored.com//Regions/252/Tournaments/2/Seasons/9618/England-Premier-League",
+    ):
+        self.driver.get(url)
+
+        df_comp_bonus = self._stages_hrefs_collector()
+
+        if df_comp_bonus is not None:
+            # hrefs = df_comp_bonus["href"].unique()
+            df_list = []
+            for index, row in df_comp_bonus.iterrows():
+                _url = row["href"]
+                competition_exp = row["competition_exp"]
+                self.driver.get(_url)
+                headers_href_df = self._collect_headers_hrefs()
+                headers_href_df["competition_exp"] = competition_exp
+                df_list.append(headers_href_df)
+            full_headers_df = pd.concat(df_list)
+        else:
+            full_headers_df = self._collect_headers_hrefs()
+            print(full_headers_df)
+
+    def _headers_hrefs_main_collector(self, df: pd.DataFrame):
+        for index, row in df.iterrows():
+            print(row)
+            break
 
     def entry_wsc(self):
         # url = wsc_config.WEB
@@ -147,9 +216,9 @@ class ParsingData:
         #
         # self.driver.find_element(By.XPATH, wsc_config.AGREE_COOKIES_BUTTON).click()
         # hrefs_df = self._hrefs_collector()
-        df = self._season_collector()
-
-        print(df.head(20))
+        # df = self._season_collector()
+        df = pd.read_excel("./wsc_scraping/seasons_hrefs.xlsx")
+        self._headers_hrefs_main_collector(df=df)
 
         print("pop up disabled")
         time.sleep(10)

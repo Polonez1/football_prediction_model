@@ -179,10 +179,7 @@ class ParsingData:
         return df
 
     # Čia reikės daryti pagal iterrows() ir perduoti url pagal season, country, season, league o po to papildomai prisidės league
-    def _stats_hrefs_collector(
-        self,
-        url="https://www.whoscored.com//Regions/252/Tournaments/2/Seasons/9618/England-Premier-League",
-    ):
+    def _stats_hrefs_collector(self, url: str, comp: str):
         self.driver.get(url)
 
         df_comp_bonus = self._stages_hrefs_collector()
@@ -200,12 +197,30 @@ class ParsingData:
             full_headers_df = pd.concat(df_list)
         else:
             full_headers_df = self._collect_headers_hrefs()
-            print(full_headers_df)
+            full_headers_df["competition_exp"] = comp
+
+        return full_headers_df
 
     def _headers_hrefs_main_collector(self, df: pd.DataFrame):
+        df_list = []
         for index, row in df.iterrows():
-            print(row)
-            break
+            url = row["href_element"]
+            season = row["season"]
+            country = row["country"]
+            competition = row["competition"]
+            original_href = row["original_url"]
+            stats_hrefs = self._stats_hrefs_collector(url=url, comp=competition)
+            stats_hrefs["url_detail"] = url
+            stats_hrefs["season"] = season
+            stats_hrefs["country"] = country
+            stats_hrefs["competition_main"] = competition
+            stats_hrefs["original_href"] = original_href
+            print(competition, season)
+            df_list.append(stats_hrefs)
+
+        df = pd.concat(df_list)
+
+        return df
 
     def entry_wsc(self):
         # url = wsc_config.WEB
@@ -218,7 +233,18 @@ class ParsingData:
         # hrefs_df = self._hrefs_collector()
         # df = self._season_collector()
         df = pd.read_excel("./wsc_scraping/seasons_hrefs.xlsx")
-        self._headers_hrefs_main_collector(df=df)
+        df = df.loc[df["country"] == "England"]
+        df = df.loc[
+            df["competition"].isin(
+                ["League Two", "League One", "Championship", "Premier League"]
+            )
+        ]
+        df = df.loc[
+            df["season"].isin(["2022/2023", "2021/2022", "2020/2021", "2019/2020"])
+        ]
+
+        dff = self._headers_hrefs_main_collector(df=df)
+        dff.to_excel("./wsc_scraping/stats_hrefs.xlsx")
 
         print("pop up disabled")
         time.sleep(10)

@@ -6,7 +6,8 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.common.exceptions import JavascriptException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from selenium.common.exceptions import NoSuchElementException
 
@@ -241,15 +242,24 @@ class ParsingData:
 
     def _collect_matches_hrefs(self):
         # divtable_body = self.driver.find_element(By.CLASS_NAME, "divtable-body")
+
+        # wait = WebDriverWait(self.driver, 10)
+        # result_links = wait.until(
+        #    EC.presence_of_all_elements_located((By.CLASS_NAME, "result-1.rc"))
+        # )
+        time.sleep(10)
         result_links = self.driver.find_elements(By.CLASS_NAME, "result-1.rc")
 
         hrefs_list = {"href_matches": []}
         for link in result_links:
             href = link.get_attribute("href")
-            print(href)
             hrefs_list["href_matches"].append(href)
 
         df = pd.DataFrame(hrefs_list)
+
+        self.driver.switch_to.default_content()
+
+        print(len(df))
         return df
 
     def _menu_date_navigation(self, collector):
@@ -259,44 +269,37 @@ class ParsingData:
 
         collected_data = []
         for btn in date_buttons:
-            print("menu button clicked")
-            time.sleep(5)
+            print(f"menu button clicked {btn}")
             self.driver.find_element(By.XPATH, btn).click()
+            print("Click succes")
             for row in date_rows:
-                time.sleep(5)
                 for col in date_columns:
-                    time.sleep(5)
-                    self.driver.find_element(
+                    button = self.driver.find_element(
                         By.XPATH,
                         wsc_config.MONTHS_BUTTON.format(date_row_x=row, date_col_x=col),
-                    ).click()
-                    print(f"click row: {row}, col: {col}")
-                    collected_data.append(collector())
-
-        df = pd.concat(collected_data)
-        return df
+                    )
+                    button_class = button.get_attribute("class")
+                    if "selectable" in button_class:
+                        button.click()
+                        collected_data.append(collector())
+                        print(f"click row: {row}, col: {col}")
 
     def _collect_matches_href_main(self, df: pd.DataFrame):
-        fixtures_href_list = df["Fixtures"].values
+        df_list = []
+        for index, row in df.iterrows():
+            # url = row["Fixtures"]
+            url = "https://www.whoscored.com/Regions/252/Tournaments/9/Seasons/9143/Stages/21052/Fixtures/England-League-Two-2022-2023"
+            print(url)
+            self.driver.get(url)
+            self._pop_up_closer()
+            self.driver.find_element(
+                By.XPATH, wsc_config.DATE_MENU_NAV_BUTTON
+            ).click()  # expand date menu
+            print("Expand menu")
+            time.sleep(5)
+            self._menu_date_navigation(collector=self._collect_matches_hrefs)
 
-        st = 0
-        for url in fixtures_href_list:
-            if st == 1:
-                print(url)
-                self.driver.get(url)
-                self._pop_up_closer()
-
-                self.driver.find_element(
-                    By.XPATH, wsc_config.DATE_MENU_NAV_BUTTON
-                ).click()  # expand date menu
-                time.sleep(5)
-                df = self._menu_date_navigation(collector=self._collect_matches_hrefs)
-                print(df.head(10))
-
-                # here date menu for loop
-
-                break
-            st = st + 1
+            break
 
     def entry_wsc(self):
         # url = wsc_config.WEB
@@ -310,6 +313,7 @@ class ParsingData:
         # df = self._season_collector()
 
         df = pd.read_excel("./wsc_scraping/stats_hrefs.xlsx")
+        # df = df.loc[df['competition']=='League One']
         self._collect_matches_href_main(df=df)
 
         # print("pop up disabled")

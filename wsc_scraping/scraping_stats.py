@@ -3,7 +3,10 @@ import pandas as pd
 from selenium import webdriver
 from selenium_stealth import stealth
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.common.exceptions import JavascriptException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+
 
 from selenium.common.exceptions import NoSuchElementException
 
@@ -40,6 +43,20 @@ class ParsingData:
         #    "Accept": "*/*",
         #    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
         # }
+
+    def _pop_up_closer(self):
+        try:
+            self.driver.find_element(By.XPATH, wsc_config.AGREE_COOKIES_BUTTON).click()
+            time.sleep(20)
+        except NoSuchElementException:
+            print("Cookies pop up not found")
+            pass
+        try:
+            self.driver.execute_script(wsc_config.JS_POP_UP_CLOSE)
+        except JavascriptException:
+            print("Pop up not found")
+            pass
+        time.sleep(20)
 
     def get_cookies(self, url: str) -> str("html file"):
         """Get cookies from url"""
@@ -222,6 +239,65 @@ class ParsingData:
 
         return df
 
+    def _collect_matches_hrefs(self):
+        # divtable_body = self.driver.find_element(By.CLASS_NAME, "divtable-body")
+        result_links = self.driver.find_elements(By.CLASS_NAME, "result-1.rc")
+
+        hrefs_list = {"href_matches": []}
+        for link in result_links:
+            href = link.get_attribute("href")
+            print(href)
+            hrefs_list["href_matches"].append(href)
+
+        df = pd.DataFrame(hrefs_list)
+        return df
+
+    def _menu_date_navigation(self, collector):
+        date_buttons = [wsc_config.FIRST_DATE_BUTTON, wsc_config.SECOND_DATE_BUTTON]
+        date_rows = [1, 2, 3]
+        date_columns = [1, 2, 3, 4]
+
+        collected_data = []
+        for btn in date_buttons:
+            print("menu button clicked")
+            time.sleep(5)
+            self.driver.find_element(By.XPATH, btn).click()
+            for row in date_rows:
+                time.sleep(5)
+                for col in date_columns:
+                    time.sleep(5)
+                    self.driver.find_element(
+                        By.XPATH,
+                        wsc_config.MONTHS_BUTTON.format(date_row_x=row, date_col_x=col),
+                    ).click()
+                    print(f"click row: {row}, col: {col}")
+                    collected_data.append(collector())
+
+        df = pd.concat(collected_data)
+        return df
+
+    def _collect_matches_href_main(self, df: pd.DataFrame):
+        fixtures_href_list = df["Fixtures"].values
+
+        st = 0
+        for url in fixtures_href_list:
+            if st == 1:
+                print(url)
+                self.driver.get(url)
+                self._pop_up_closer()
+
+                self.driver.find_element(
+                    By.XPATH, wsc_config.DATE_MENU_NAV_BUTTON
+                ).click()  # expand date menu
+                time.sleep(5)
+                df = self._menu_date_navigation(collector=self._collect_matches_hrefs)
+                print(df.head(10))
+
+                # here date menu for loop
+
+                break
+            st = st + 1
+
     def entry_wsc(self):
         # url = wsc_config.WEB
         # self.driver.get(url)
@@ -232,21 +308,11 @@ class ParsingData:
         # self.driver.find_element(By.XPATH, wsc_config.AGREE_COOKIES_BUTTON).click()
         # hrefs_df = self._hrefs_collector()
         # df = self._season_collector()
-        df = pd.read_excel("./wsc_scraping/seasons_hrefs.xlsx")
-        df = df.loc[df["country"] == "England"]
-        df = df.loc[
-            df["competition"].isin(
-                ["League Two", "League One", "Championship", "Premier League"]
-            )
-        ]
-        df = df.loc[
-            df["season"].isin(["2022/2023", "2021/2022", "2020/2021", "2019/2020"])
-        ]
 
-        dff = self._headers_hrefs_main_collector(df=df)
-        dff.to_excel("./wsc_scraping/stats_hrefs.xlsx")
+        df = pd.read_excel("./wsc_scraping/stats_hrefs.xlsx")
+        self._collect_matches_href_main(df=df)
 
-        print("pop up disabled")
+        # print("pop up disabled")
         time.sleep(10)
         self.driver.quit()
 

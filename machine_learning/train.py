@@ -33,9 +33,10 @@ def train_model():
     # scores = cross_val_score(rfc, X_test, y_test, cv=3)
     # score = rfc.score(X_test, y_test)
 
-    return model
+    return X_train
 
 
 if "__main__" == __name__:
     model = train_model()
-    joblib.dump(model, ".\deployment\model.joblib")
+    print(model.dtypes)
+    # joblib.dump(model, ".\deployment\model.joblib")

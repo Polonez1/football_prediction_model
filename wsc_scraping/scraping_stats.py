@@ -49,7 +49,7 @@ class ParsingData:
     def _pop_up_closer(self):
         try:
             self.driver.find_element(By.XPATH, wsc_config.AGREE_COOKIES_BUTTON).click()
-            time.sleep(20)
+            time.sleep(5)
         except NoSuchElementException:
             print("Cookies pop up not found")
             pass
@@ -58,7 +58,7 @@ class ParsingData:
         except JavascriptException:
             print("Pop up not found")
             pass
-        time.sleep(20)
+        time.sleep(5)
 
     def get_cookies(self, url: str) -> str("html file"):
         """Get cookies from url"""
@@ -119,7 +119,7 @@ class ParsingData:
 
     def _season_hrefs_collector(self, url):
         self.driver.get(url)
-        time.sleep(10)
+        time.sleep(5)
         hrefs_season_list = self.driver.find_element(By.ID, "seasons").find_elements(
             By.TAG_NAME, "option"
         )
@@ -154,7 +154,7 @@ class ParsingData:
         return df
 
     def _stages_hrefs_collector(self):
-        time.sleep(10)
+        time.sleep(5)
         try:
             hrefs_stage_list = self.driver.find_element(By.ID, "stages").find_elements(
                 By.TAG_NAME, "option"
@@ -248,7 +248,7 @@ class ParsingData:
         # result_links = wait.until(
         #    EC.presence_of_all_elements_located((By.CLASS_NAME, "result-1.rc"))
         # )
-        time.sleep(10)
+        time.sleep(5)
         result_links = self.driver.find_elements(By.CLASS_NAME, "result-1.rc")
 
         hrefs_list = {"href_matches": []}
@@ -328,7 +328,11 @@ class ParsingData:
     def _collect_match_headers_hrefs(
         self, url
     ):  # kartojasi, reikės perkelti kaip vieną
-        self.driver.get(url)
+        try:
+            self.driver.get(url)
+        except NoSuchElementException:
+            time.sleep(30)
+            self.driver.refresh()
 
         fixtures_href = self.driver.find_element(By.ID, "sub-navigation").find_elements(
             By.TAG_NAME, "a"
@@ -353,40 +357,58 @@ class ParsingData:
 
         df_dict = {}
         counter = 0
+        time.sleep(5)
+
+        text_list = []
         for i in stats_preematch_container:
-            if counter == 0:
-                counter += 1
-                continue
             stat_group = i.find_elements(By.CLASS_NAME, "stat")
             for s in stat_group:
                 element_text = s.text
-                text_without_parentheses = (
-                    re.sub(r"\([^)]*\)", "", element_text).strip().replace("%", "")
-                )
 
-                detail = re.match(
-                    r"(\d+\.\d+)\s+(.*?)\s+(\d+\.\d+)", text_without_parentheses
-                )
-                if detail:
-                    home_header = "home_" + detail.group(2)
-                    home_num = float(detail.group(1))
-                    away_header = "away_" + detail.group(2)
-                    away_num = float(detail.group(3))
+                text_list.append(element_text)
 
-                    df_dict[home_header] = home_num
-                    df_dict[away_header] = away_num
-                else:
-                    print("Text not found")
+        for t in text_list:
+            txt = t.replace("\n", " ")
+            text_without_parentheses = (
+                re.sub(r"\([^)]*\)", "", txt).strip().replace("%", "")
+            ).strip()
+            # print(text_without_parentheses)
+            match = re.match(r"([\d.]+)\s+(.*?)\s+([\d.]+)", text_without_parentheses)
+            if match:
+                home_header = ("home_" + str(match.group(2))).replace(" ", "_")
+                home_num = float(match.group(1))
+                away_header = ("away_" + str(match.group(2))).replace(" ", "_")
+                away_num = float(match.group(3))
+                df_dict[home_header] = home_num
+                df_dict[away_header] = away_num
+            else:
+                print("Text not found")
 
-                break
-
-        dff = pd.DataFrame(df_dict)
-        print(dff)
+        dff = pd.DataFrame.from_dict(df_dict, orient="index").T
+        # print(dff)
+        return dff
 
     def _scrap_preview(self, url):
-        self.driver.get(url)
+        try:
+            self.driver.get(url)
+        except NoSuchElementException:
+            time.sleep(30)
+            self.driver.refresh()
         time.sleep(10)
         match_header = self.driver.find_element(By.ID, "match-header")
+
+        info_block = self.driver.find_element(By.CLASS_NAME, "icons-details-container")
+        dt_elements = info_block.find_elements(By.TAG_NAME, "dt")
+        dd_elements = info_block.find_elements(By.TAG_NAME, "dd")
+        info = {}
+
+        for i in range(len(dt_elements)):
+            dt_text = dt_elements[i].text
+            dd_text = dd_elements[i].text
+            info[dt_text] = dd_text
+
+        kick_off_time = info.get("Kick off:")
+        date = info.get("Date:")
 
         home_team = match_header.find_element(
             By.CSS_SELECTOR, '.home[class*="home"] .team-link'
@@ -395,6 +417,8 @@ class ParsingData:
         away_team = match_header.find_element(
             By.CSS_SELECTOR, '.away[class*="away"] .team-link'
         ).get_attribute("text")
+
+        result_element = self.driver.find_element(By.CLASS_NAME, "result").text
 
         probalbly_lineups = self.driver.find_element(By.ID, "preview-lineups")
         home_team_html = probalbly_lineups.find_element(By.CLASS_NAME, "home")
@@ -406,28 +430,48 @@ class ParsingData:
         away_formation = away_team_html.find_element(
             By.CLASS_NAME, "formation-label"
         ).text
-        self._stats_group()
+        general_stats = self._stats_group()
 
-        print(home_team, " ", home_formation, " ", away_team, " ", away_formation)
+        general_stats["Kick off"] = kick_off_time
+        general_stats["date"] = date
+        general_stats["result"] = result_element
+        general_stats["home_team"] = home_team
+        general_stats["away_team"] = away_team
+        general_stats["home_formation"] = home_formation
+        general_stats["away_formation"] = away_formation
+        general_stats["merged_id"] = 1
+
+        print(home_team, away_team)
+        return general_stats
 
     def _scrap_stats(self):
         pass
 
-    def _create_matches_stats_df(self):
-        # for index, row in df.iterrows():
-        url = "https://www.whoscored.com/Matches/1649514/Preview/England-League-Two-2022-2023-Hartlepool-Harrogate-Town"
-        # url = row["href_matches"]
-        # competition_exp = row['competition_exp']
-        # season = row['season']
-        # country = row['country']
-        # competition_main = row['competition_main']
-        self.driver.get(url)
-        headers_hrefs = self._collect_match_headers_hrefs(url=url)
-        url_preview = headers_hrefs["Preview"][0]
-        # url_stats = headers_hrefs["Match Centre"]
-        self._scrap_preview(url=url_preview)
+    def _create_matches_stats_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        df_list = []
+        for index, row in df.iterrows():
+            # url = "https://www.whoscored.com/Matches/1649514/Preview/England-League-Two-2022-2023-Hartlepool-Harrogate-Town"
+            url = row["href_matches"]
+            competition_exp = row["competition_exp"]
+            season = row["season"]
+            country = row["country"]
+            competition_main = row["competition_main"]
+            try:
+                self.driver.get(url)
+            except NoSuchElementException:
+                time.sleep(30)
+                self.driver.refresh()
 
-        print(url_preview)
+            headers_hrefs = self._collect_match_headers_hrefs(url=url)
+            url_preview = headers_hrefs["Preview"][0]
+            # url_stats = headers_hrefs["Match Centre"][0]
+            preview_df = self._scrap_preview(url=url_preview)
+            df_list.append(preview_df)
+
+            # preview_df.to_excel("./wsc_scraping/test.xlsx")
+
+        dff = pd.concat(df_list)
+        return dff
 
     def entry_wsc(self):
         # url = wsc_config.WEB
@@ -440,10 +484,13 @@ class ParsingData:
         # hrefs_df = self._hrefs_collector()
         # df = self._season_collector()
 
-        # df = pd.read_excel("./wsc_scraping/stats_hrefs.xlsx")
-        # df = df.loc[df['competition']=='League One']
+        df = pd.read_excel("./wsc_scraping/matches_hrefs.xlsx")
+        df = df.loc[df["competition_main"] == "Premier League"]
+        df = df.loc[df["season"] == "2022/2023"]
         # self._collect_matches_href_main(df=df)
-        df = self._create_matches_stats_df()
+        df = self._create_matches_stats_df(df=df)
+
+        df.to_excel("./wsc_scraping/test.xlsx")
 
         print(df)
         # print("pop up disabled")

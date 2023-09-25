@@ -48,12 +48,6 @@ class ResultTransformer(BaseEstimator, TransformerMixin):
 
         return df
 
-    def _calc_xG_by_homeaway(self):
-        pass
-
-    def _calculate_xG(self, df: pd.DataFrame):
-        pass
-
 
 class CustomEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, columns):

@@ -12,6 +12,31 @@ COL_TO_X = [
     "home_form",
     "away_form",
 ]
+
+COL_TO_XX = [
+    "home_Goals",
+    "away_Goals",
+    "home_Assists",
+    "away_Assists",
+    "home_Average_Ratings",
+    "away_Average_Ratings",
+    "home_Average_Age",
+    "away_Average_Age",
+    "home_Average_Height",
+    "away_Average_Height",
+    "home_Shots_pg",
+    "away_Shots_pg",
+    "home_Aerial_Duel_Success",
+    "away_Aerial_Duel_Success",
+    "home_Dribbles_pg",
+    "away_Dribbles_pg",
+    "home_Tackles_pg",
+    "away_Tackles_pg",
+    "home_formation",
+    "away_formation",
+]
+
+
 COL_TO_Y = ["result_final"]
 
 

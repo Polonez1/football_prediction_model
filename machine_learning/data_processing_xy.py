@@ -13,3 +13,11 @@ def split_X_y(df: pd.DataFrame) -> pd.DataFrame:
     y = y.to_numpy().ravel()
 
     return X, y
+
+
+def split_X_y_wsc(df: pd.DataFrame) -> pd.DataFrame:
+    X = df[ml_config.COL_TO_XX]
+    y = df[ml_config.COL_TO_Y]
+    y = y.to_numpy().ravel()
+
+    return X, y

@@ -41,13 +41,22 @@ def train_model():
 def train_model2():
     df = pd.read_excel(ml_config.DATA_PATH_BY_STATS)
     df = transformer_wsc.transform_data(df)
+    X, y = data_processing_xy.split_X_y_wsc(df)
+    tts = train_test_split(X, y, stratify=y, test_size=0.3)
 
-    return df
+    X_train, X_test, y_train, y_test = tts
+    rfc = rfc_model.create_rfc_model(params=ml_config.rfc_params)
+    rfc.fit(X_train, y_train)
+    sc = rfc.score(X_test, y_test)
+    model = rfc_model.shap_explainer(rfc, X_test=X_test)
+    scores = cross_val_score(rfc, X_test, y_test, cv=3)
+
+    return model
 
 
 if "__main__" == __name__:
     model = train_model2()
-    print(model.dtypes)
+    print(model)
 
     # print(model["date"].head(10))
-    # joblib.dump(model, ".\deployment\model.joblib")
+    joblib.dump(model, ".\deployment\model.joblib")

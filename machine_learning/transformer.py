@@ -46,8 +46,9 @@ class EloTransformer(BaseEstimator, TransformerMixin):
         X3 = self._correct_xG(X2)
         X4 = self._xG_coef(X3)
         X5 = self._xG_multiple_coef(X4)
+        X6 = self._add_form(X5)
 
-        return X5
+        return X6
 
     def _calc_elo_xG(self, elo1, elo2):
         xG_coef = 1 / (10 ** ((elo1 - elo2) / self.elo_factor) + 1)
@@ -123,6 +124,41 @@ class EloTransformer(BaseEstimator, TransformerMixin):
         df["elo_diff"] = df["home_elo"] - df["away_elo"]
         return df
 
+    def _add_form_by_homeaway(self, df: pd.DataFrame, home_away: str, y=None):
+        df["Date"] = pd.to_datetime(df["Date"], format="%Y/%m/%d")
+        dff = df.sort_values(by=[f"{home_away}_team", "Date"])
+
+        dff[f"{home_away}_sum_elo"] = (
+            dff.groupby(f"{home_away}_team")[f"{home_away}_elo_change"]
+            .rolling(5, min_periods=1)
+            .sum()
+            .reset_index(level=0, drop=True)
+        )
+
+        dff[f"{home_away}_form"] = dff.groupby(f"{home_away}_team")[
+            f"{home_away}_sum_elo"
+        ].shift(1)
+
+        dff = dff.sort_values(by="Date", ascending=False, inplace=False)
+
+        return dff
+
+    def _add_form(self, df: pd.DataFrame):
+        dff = self._add_form_by_homeaway(df, home_away="home")
+        dff2 = self._add_form_by_homeaway(dff, home_away="away")
+        dff2["home_form"] = np.where(
+            pd.isna(dff2["home_form"]), dff2["home_sum_elo"], dff2["home_form"]
+        )
+        dff2["away_form"] = np.where(
+            pd.isna(dff2["away_form"]), dff2["away_sum_elo"], dff2["away_form"]
+        )
+
+        dff_final = dff2.drop(
+            columns=["away_sum_elo", "home_sum_elo", "away_coef", "home_coef"]
+        )
+
+        return dff_final
+
 
 def create_pipeline():
     col_transformer = ColumnTransformer(
@@ -154,6 +190,7 @@ if "__main__" == __name__:
     df = pd.read_excel("./data/downloaded_data/matches.xlsx")
     df = df[
         [
+            "Date",
             "home_team",
             "home_elo",
             "away_team",
@@ -163,6 +200,8 @@ if "__main__" == __name__:
             "away_prb",
             "home_result",
             "away_result",
+            "home_elo_change",
+            "away_elo_change",
         ]
     ]
     dft = transform_data(df)

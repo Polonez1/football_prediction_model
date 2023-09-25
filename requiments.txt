@@ -1,10 +1,10 @@
-request
-bs4
-selenium
-request
-joblib
-pydantic
-fastapi
-typing
-sklearn???
-shap
+pip install request
+pip install scikit-learn
+pip install fastapi
+pip install beautifulsoup4
+pip install selenium
+pip install joblib
+pip install pydantic
+pip install shap
+pip inplace datetime
+pip install category_encoders

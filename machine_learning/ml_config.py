@@ -1,5 +1,3 @@
-from ray import tune
-
 COL_TO_X = [
     # "home_elo",
     # "away_elo",
@@ -11,12 +9,14 @@ COL_TO_X = [
     "elo_diff",
     "place_elo_home",
     "place_elo_away",
+    "home_form",
+    "away_form",
 ]
 COL_TO_Y = ["result_final"]
 
 
-DATA_PATH = "./data/downloaded_data/matches.xlsx"
-
+DATA_PATH_BY_ELO = "./data/downloaded_data/matches.xlsx"
+DATA_PATH_BY_STATS = "./data/downloaded_data/EPL_22_23.xlsx"
 
 rfc_params = {
     "n_estimators": 50,

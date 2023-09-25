@@ -6,3 +6,5 @@ pip install selenium
 pip install joblib
 pip install pydantic
 pip install shap
+pip inplace datetime
+pip install category_encoders

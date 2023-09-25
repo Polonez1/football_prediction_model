@@ -15,8 +15,8 @@ COL_TO_X = [
 COL_TO_Y = ["result_final"]
 
 
-DATA_PATH = "./data/downloaded_data/matches.xlsx"
-
+DATA_PATH_BY_ELO = "./data/downloaded_data/matches.xlsx"
+DATA_PATH_BY_STATS = "./data/downloaded_data/EPL_22_23.xlsx"
 
 rfc_params = {
     "n_estimators": 50,

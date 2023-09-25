@@ -16,9 +16,11 @@ import transformer
 import ml_config
 import rfc_model
 
+import transformer_wsc
+
 
 def train_model():
-    df = pd.read_excel(ml_config.DATA_PATH)
+    df = pd.read_excel(ml_config.DATA_PATH_BY_ELO)
     dft = transformer.transform_data(df)
     X, y = data_processing_xy.split_X_y(dft)
     tts = train_test_split(X, y, stratify=y, test_size=0.3)
@@ -36,7 +38,16 @@ def train_model():
     return X_train
 
 
+def train_model2():
+    df = pd.read_excel(ml_config.DATA_PATH_BY_STATS)
+    df = transformer_wsc.transform_data(df)
+
+    return df
+
+
 if "__main__" == __name__:
-    model = train_model()
+    model = train_model2()
     print(model.dtypes)
+
+    # print(model["date"].head(10))
     # joblib.dump(model, ".\deployment\model.joblib")

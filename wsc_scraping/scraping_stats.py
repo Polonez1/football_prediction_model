@@ -14,6 +14,8 @@ from selenium.common.exceptions import NoSuchElementException
 
 from bs4 import BeautifulSoup
 
+from random import randint
+
 import pickle
 import time
 from time import sleep
@@ -29,6 +31,8 @@ class ParsingData:
         self.options.add_experimental_option("excludeSwitches", ["enable-automation"])
         self.options.add_experimental_option("useAutomationExtension", False)
         self.options.add_argument("--disable-notifications")
+        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"
+        self.options.add_argument(f"user-agent={self.user_agent}")
 
         chrome_service = ChromeService(executable_path=wsc_config.CHROME_DRIVER_V117)
         self.driver = webdriver.Chrome(service=chrome_service, options=self.options)
@@ -49,7 +53,7 @@ class ParsingData:
     def _pop_up_closer(self):
         try:
             self.driver.find_element(By.XPATH, wsc_config.AGREE_COOKIES_BUTTON).click()
-            time.sleep(5)
+            time.sleep(3)
         except NoSuchElementException:
             print("Cookies pop up not found")
             pass
@@ -58,7 +62,7 @@ class ParsingData:
         except JavascriptException:
             print("Pop up not found")
             pass
-        time.sleep(5)
+        time.sleep(3)
 
     def get_cookies(self, url: str) -> str("html file"):
         """Get cookies from url"""
@@ -119,7 +123,7 @@ class ParsingData:
 
     def _season_hrefs_collector(self, url):
         self.driver.get(url)
-        time.sleep(5)
+        time.sleep(randint(1, 4))
         hrefs_season_list = self.driver.find_element(By.ID, "seasons").find_elements(
             By.TAG_NAME, "option"
         )
@@ -154,7 +158,7 @@ class ParsingData:
         return df
 
     def _stages_hrefs_collector(self):
-        time.sleep(5)
+        time.sleep(randint(1, 4))
         try:
             hrefs_stage_list = self.driver.find_element(By.ID, "stages").find_elements(
                 By.TAG_NAME, "option"
@@ -248,7 +252,7 @@ class ParsingData:
         # result_links = wait.until(
         #    EC.presence_of_all_elements_located((By.CLASS_NAME, "result-1.rc"))
         # )
-        time.sleep(5)
+        time.sleep(randint(1, 4))
         result_links = self.driver.find_elements(By.CLASS_NAME, "result-1.rc")
 
         hrefs_list = {"href_matches": []}
@@ -313,7 +317,7 @@ class ParsingData:
                 By.XPATH, wsc_config.DATE_MENU_NAV_BUTTON
             ).click()  # expand date menu
             print("Expand menu")
-            time.sleep(5)
+            time.sleep(randint(1, 4))
             df = self._menu_date_navigation(collector=self._collect_matches_hrefs)
             df["competition_exp"] = competition_exp
             df["season"] = season
@@ -331,7 +335,7 @@ class ParsingData:
         try:
             self.driver.get(url)
         except NoSuchElementException:
-            time.sleep(30)
+            time.sleep(randint(15, 45))
             self.driver.refresh()
 
         fixtures_href = self.driver.find_element(By.ID, "sub-navigation").find_elements(
@@ -357,7 +361,7 @@ class ParsingData:
 
         df_dict = {}
         counter = 0
-        time.sleep(5)
+        time.sleep(randint(1, 4))
 
         text_list = []
         for i in stats_preematch_container:
@@ -394,7 +398,7 @@ class ParsingData:
         except NoSuchElementException:
             time.sleep(30)
             self.driver.refresh()
-        time.sleep(10)
+        time.sleep(randint(2, 5))
         match_header = self.driver.find_element(By.ID, "match-header")
 
         info_block = self.driver.find_element(By.CLASS_NAME, "icons-details-container")
@@ -449,6 +453,7 @@ class ParsingData:
 
     def _create_matches_stats_df(self, df: pd.DataFrame) -> pd.DataFrame:
         df_list = []
+        c = 92
         for index, row in df.iterrows():
             # url = "https://www.whoscored.com/Matches/1649514/Preview/England-League-Two-2022-2023-Hartlepool-Harrogate-Town"
             url = row["href_matches"]
@@ -460,17 +465,25 @@ class ParsingData:
                 self.driver.get(url)
             except NoSuchElementException:
                 time.sleep(30)
+                print("Refresh")
                 self.driver.refresh()
+                print("Refreshed")
 
             headers_hrefs = self._collect_match_headers_hrefs(url=url)
             url_preview = headers_hrefs["Preview"][0]
             # url_stats = headers_hrefs["Match Centre"][0]
             preview_df = self._scrap_preview(url=url_preview)
             df_list.append(preview_df)
+            path = "./wsc_scraping/EPL_22_23 copy.xlsx"
 
-            # preview_df.to_excel("./wsc_scraping/test.xlsx")
+            # existing_df = pd.read_excel(path)
+            # combined_df = pd.concat([existing_df, preview_df], ignore_index=True)
+            # combined_df.to_excel(path, index=False)
+            print(c)
+            c += 1
 
         dff = pd.concat(df_list)
+
         return dff
 
     def entry_wsc(self):
@@ -486,13 +499,15 @@ class ParsingData:
 
         df = pd.read_excel("./wsc_scraping/matches_hrefs.xlsx")
         df = df.loc[df["competition_main"] == "Premier League"]
-        df = df.loc[df["season"] == "2022/2023"]
-        # self._collect_matches_href_main(df=df)
+        df = df.loc[df["season"] == "2020/2021"]
+
+        desired_data = df.iloc[92:]
+
         df = self._create_matches_stats_df(df=df)
 
-        df.to_excel("./wsc_scraping/test.xlsx")
+        # df.to_excel("./wsc_scraping/test.xlsx")
 
-        print(df)
+        print(len(df))
         # print("pop up disabled")
         time.sleep(10)
         self.driver.quit()

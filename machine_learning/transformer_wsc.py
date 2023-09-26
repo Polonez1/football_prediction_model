@@ -49,6 +49,16 @@ class ResultTransformer(BaseEstimator, TransformerMixin):
         return df
 
 
+class StatsTransformer(ResultTransformer):
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X: pd.DataFrame, y=None):
+        XX = X.pipe(self._transform_date).pipe(self._transform_formation)
+
+        return XX
+
+
 class CustomEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, columns):
         self.columns = columns
@@ -71,8 +81,21 @@ def create_pipeline():
     return pipeline
 
 
+def create_pipeline_predict():
+    pipeline = make_pipeline(StatsTransformer())
+
+    return pipeline
+
+
 def transform_data(df: pd.DataFrame) -> pd.DataFrame:
     pipeline = create_pipeline()
+    transformed_data = pipeline.fit_transform(df)
+
+    return transformed_data
+
+
+def transform_predict_dat(df: pd.DataFrame):
+    pipeline = create_pipeline_predict()
     transformed_data = pipeline.fit_transform(df)
 
     return transformed_data

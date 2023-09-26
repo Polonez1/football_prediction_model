@@ -55,8 +55,13 @@ def train_model2():
 
 
 if "__main__" == __name__:
-    model = train_model2()
-    print(model)
+    # model = train_model2()
+    # print(model)
+
+    df = pd.read_excel("./data/downloaded_data/epl_to_prediction.xlsx")
+    df = transformer_wsc.transform_predict_dat(df)
+
+    print(df.dtypes)
 
     # print(model["date"].head(10))
-    joblib.dump(model, ".\deployment\model.joblib")
+    # joblib.dump(model, ".\deployment\model.joblib")

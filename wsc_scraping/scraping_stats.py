@@ -139,9 +139,7 @@ class ParsingData:
         hrefs_df = pd.DataFrame(hrefs_dict)
         return hrefs_df
 
-    def _season_collector(
-        self, hrefs_data: pd.DataFrame = pd.read_excel(".\wsc_scraping\hrefs.xlsx")
-    ):
+    def _season_collector(self, hrefs_data: pd.DataFrame):
         full_seasons_df = []
         for index, row in hrefs_data.iterrows():
             country = row["country"]
@@ -324,10 +322,10 @@ class ParsingData:
             s = str(season).replace("/", "_")
             df["country"] = country
             df["competition_main"] = competition_main
-            df.to_excel(f"./wsc_scraping/data/matche_href_{s}_{competition_exp}.xlsx")
+            # df.to_excel(f"../wsc_scraping/data/matches_href_{s}_{competition_exp}.xlsx")
             df_list.append(df)
         dff = pd.concat(df_list)
-        dff.to_excel("./wsc_scraping/matches_hrefs.xlsx")
+        dff.to_excel("./wsc_scraping/epl_matches_hrefs.xlsx")
 
     def _collect_match_headers_hrefs(
         self, url
@@ -474,7 +472,7 @@ class ParsingData:
             # url_stats = headers_hrefs["Match Centre"][0]
             preview_df = self._scrap_preview(url=url_preview)
             df_list.append(preview_df)
-            path = "./wsc_scraping/EPL_22_23 copy.xlsx"
+            # path = "./wsc_scraping/EPL_22_23 copy.xlsx"
 
             # existing_df = pd.read_excel(path)
             # combined_df = pd.concat([existing_df, preview_df], ignore_index=True)
@@ -497,17 +495,15 @@ class ParsingData:
         # hrefs_df = self._hrefs_collector()
         # df = self._season_collector()
 
-        df = pd.read_excel("./wsc_scraping/matches_hrefs.xlsx")
-        df = df.loc[df["competition_main"] == "Premier League"]
-        df = df.loc[df["season"] == "2020/2021"]
-
-        desired_data = df.iloc[92:]
+        df = pd.read_excel("./wsc_scraping/epl_matches_hrefs.xlsx")
+        # df = df.loc[df["competition_main"] == "Premier League"]
+        # df = df.loc[df["season"] == "2020/2021"]
 
         df = self._create_matches_stats_df(df=df)
 
-        # df.to_excel("./wsc_scraping/test.xlsx")
+        df.to_excel("./wsc_scraping/epl_to_prediction.xlsx")
 
-        print(len(df))
+        # print(len(df))
         # print("pop up disabled")
         time.sleep(10)
         self.driver.quit()

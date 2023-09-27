@@ -23,12 +23,6 @@ We use Machine learning and historical data to predict EPL football matches
 
 - **requirements.txt**: pip install requirements
 
-## Used technologies
-
-- RandomForestClassifier
-- Poisson Distribution
-- Monte Carlo Simulation
-
 ## Instalation
 Download project to your local repository.
 - open cmd or powershell in you folder
@@ -61,7 +55,7 @@ Get all incomming matches predictions
 
 # Goals
 
-- Based on statistics and historical data, make predictions: win, draw, away win
+- Based on statistics and historical data, make predictions: win, draw, away win using Machine Learning (random fores classifier)
 - have a score of ~55%
 
 # Conclusions

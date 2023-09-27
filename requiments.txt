@@ -1,4 +1,4 @@
-request
+requests
 scikit-learn
 fastapi
 beautifulsoup4

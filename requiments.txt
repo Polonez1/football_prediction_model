@@ -1,10 +1,11 @@
-pip install request
-pip install scikit-learn
-pip install fastapi
-pip install beautifulsoup4
-pip install selenium
-pip install joblib
-pip install pydantic
-pip install shap
-pip inplace datetime
-pip install category_encoders
+request
+scikit-learn
+fastapi
+beautifulsoup4
+selenium
+joblib
+pydantic
+shap
+datetime
+category_encoders
+argparse

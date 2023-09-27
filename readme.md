@@ -27,7 +27,7 @@ We use Machine learning and historical data to predict EPL football matches
 Download project to your local repository.
 - open cmd or powershell in you folder
 - enter this command in cmd or powershell
-```https://github.com/Polonez1/football_prediction_model```
+```git clone https://github.com/Polonez1/football_prediction_model```
 
 install all requirements
 ```pip install -r requirements.txt```

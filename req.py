@@ -40,12 +40,23 @@ def get_fixtures_match(match_name: str):
 def get_prediction(json_data):
     response = requests.post("http://127.0.0.1:8000/predict", json=json_data)
     # print(response.json())
-    print(response.json())
+    # print(response.json())
+
+    return response.json()
     # return response.json()
 
 
-if "__main__" == __name__:
-    show_fixtures()
+def get_all_fixtures_prediction():
+    fixtures_df = requests.get(f"http://127.0.0.1:8000/static_table")
+    fixtures = fixtures_df.json()
 
-    json_data = get_fixtures_match(match_name="Crystal Palace-Fulham")
-    get_prediction(json_data=json_data)
+    for key in fixtures:
+        single_match = get_fixtures_match(match_name=key)
+        pred = get_prediction(json_data=single_match)
+        print(f"\x1b[32m {key} \x1b[0m: {pred}")
+
+
+if "__main__" == __name__:
+    # show_fixtures()
+
+    get_all_fixtures_prediction()

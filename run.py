@@ -20,6 +20,12 @@ if __name__ == "__main__":
         help="predict match",
     )
 
+    parser.add_argument(
+        "--predict_all",
+        action="store_true",
+        help="predict all matches",
+    )
+
     # ------Args and actions----------#
     parser.add_argument("--match", type=str, help="match name from fixtures")
 
@@ -30,7 +36,10 @@ if __name__ == "__main__":
     elif args.predict:
         matches = args.match
         json_data = req.get_fixtures_match(match_name=matches)
-        req.get_prediction(json_data=json_data)
+        pred = req.get_prediction(json_data=json_data)
+        print(pred)
+    elif args.predict_all:
+        req.get_all_fixtures_prediction()
 
     else:
         print("Wrong command")

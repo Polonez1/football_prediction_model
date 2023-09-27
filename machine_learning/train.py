@@ -51,11 +51,11 @@ def train_model2():
     # rfc_model.shap_explainer(rfc, X_test=X_test)
     # scores = cross_val_score(rfc, X_test, y_test, cv=3)
 
-    return rfc
+    return df
 
 
 if "__main__" == __name__:
     model = train_model2()
-
+    print(model.loc[model["result_final"] == 0])
     # print(model["date"].head(10))
-    joblib.dump(model, ".\deployment\model.joblib")
+    # joblib.dump(model, ".\deployment\model.joblib")

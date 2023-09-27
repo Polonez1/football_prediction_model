@@ -35,7 +35,7 @@ install all requirements
 - enable app in cmd or powershell
 ```python -m uvicorn main:app --reload```
 
-- open new powershell or cmd window and change to project directody
+- open new powershell or cmd window and change to project directory
 ```cd \project_directory\```
 
 The app is running in one window and the project is running in the other, which will make requests to the app.

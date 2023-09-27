@@ -30,6 +30,9 @@ We use Machine learning and historical data to predict EPL football matches
 ## Instalation
 
 
+install all requirements
+```pip install -r requirements.txt```
+
 
 ## Run
 

@@ -5,7 +5,7 @@ We use Machine learning and historical data to predict EPL football matches
 # Project structure
 
 - **data/downloaded_data**: Data Folder
-  - `EPL_22_23.xlsx: Hisrorical EPL data for 2020-2023 season
+  - `EPL_22_23.xlsx`: Hisrorical EPL data for 2020-2023 season
   - `epl_to_prediction.xlsx`: fixtures data with stats
   - `matches.xlsx`: ELO data to test model which based on ELO stats
 
